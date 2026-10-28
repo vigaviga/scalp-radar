@@ -7,6 +7,9 @@ public sealed partial class SymbolState
 {
     private OiHistory? _oi;
 
+    /// <summary>Local order book metrics; only set while the symbol is shortlisted.</summary>
+    public BookTracker? Book { get; set; }
+
     public OiHistory Oi => _oi ??= new OiHistory(TimeSpan.FromHours(_opt.KeepOiHours));
 
     public double? MarkPrice { get; private set; }

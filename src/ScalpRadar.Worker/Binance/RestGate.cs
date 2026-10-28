@@ -57,6 +57,27 @@ public sealed class RestGate(IOptions<BinanceOptions> options, TimeProvider time
         }
     }
 
+    /// <summary>
+    /// For REST calls made inside Binance.Net (the order book snapshot): waits for budget and counts the weight
+    /// until the next response header corrects it.
+    /// </summary>
+    public async Task ReserveAsync(int weight, CancellationToken ct)
+    {
+        await _lock.WaitAsync(ct);
+        try
+        {
+            await WaitForCapacityAsync(weight, ct);
+            var minute = CurrentMinute();
+            _usedWeight = (minute == _usedMinute ? _usedWeight : 0) + weight;
+            _usedMinute = minute;
+            if (_usedWeight > _peakWeight) _peakWeight = _usedWeight;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
     private async Task WaitForCapacityAsync(int weight, CancellationToken ct)
     {
         while (true)

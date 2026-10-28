@@ -6,7 +6,7 @@ namespace ScalpRadar.Worker.Market;
 // Milestone 2 placeholders. Later milestones fill these in (OI, funding, books, scoring).
 public sealed partial class MarketStateLoop
 {
-    private int BookCount => 0;
+    private int BookCount => _states.Values.Count(s => s.Book is not null);
 
     private IReadOnlyDictionary<string, int> _fundingIntervals = new Dictionary<string, int>();
     private int _defaultFundingHours = 8;
@@ -52,9 +52,16 @@ public sealed partial class MarketStateLoop
         if (_states.TryGetValue(o.Symbol, out var s)) s.ApplyOi(o);
     }
 
-    private void OnBookSnapshot(BookSnapshotEvent b) { }
+    private void OnBookSnapshot(BookSnapshotEvent b)
+    {
+        if (_states.TryGetValue(b.Symbol, out var s)) s.Book?.Apply(b.ReceivedUtc, b.Bids, b.Asks);
+    }
 
-    private void OnBookStatus(BookStatusEvent b) { }
+    private void OnBookStatus(BookStatusEvent b)
+    {
+        if (!_states.TryGetValue(b.Symbol, out var s)) return;
+        s.Book = b.Active ? new BookTracker(_bookOptions) : null; // a fresh book starts with no history
+    }
 
     private void OnFundingIntervals(FundingIntervalsEvent f)
     {

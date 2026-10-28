@@ -48,6 +48,8 @@ public static class ServiceRegistration
         services.AddHostedService<UniverseService>();
         services.AddHostedService<TickTimer>();
         services.AddHostedService<OiPoller>();
+        services.AddSingleton<OrderBookManager>();
+        services.AddHostedService(sp => sp.GetRequiredService<OrderBookManager>());
 
         var telegram = config.GetSection(TelegramOptions.Section).Get<TelegramOptions>() ?? new TelegramOptions();
         if (telegram.Enabled)

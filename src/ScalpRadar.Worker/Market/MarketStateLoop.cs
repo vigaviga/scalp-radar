@@ -18,6 +18,7 @@ public sealed partial class MarketStateLoop : BackgroundService
     private readonly EngineStatus _status;
     private readonly StateOptions _stateOptions;
     private readonly HeatmapOptions _heatmapOptions;
+    private readonly OrderBookOptions _bookOptions;
     private readonly EngineOptions _engine;
     private readonly TimeProvider _time;
     private readonly ILogger<MarketStateLoop> _log;
@@ -42,6 +43,7 @@ public sealed partial class MarketStateLoop : BackgroundService
         EngineStatus status,
         IOptions<StateOptions> stateOptions,
         IOptions<HeatmapOptions> heatmapOptions,
+        IOptions<OrderBookOptions> bookOptions,
         IOptions<EngineOptions> engine,
         TimeProvider time,
         ILogger<MarketStateLoop> log,
@@ -52,6 +54,7 @@ public sealed partial class MarketStateLoop : BackgroundService
         _status = status;
         _stateOptions = stateOptions.Value;
         _heatmapOptions = heatmapOptions.Value;
+        _bookOptions = bookOptions.Value;
         _engine = engine.Value;
         _time = time;
         _log = log;

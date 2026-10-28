@@ -77,8 +77,8 @@ public sealed class OrderBookOptions
     public int MinMustHavesToShortlist { get; set; } = 3;
     public int UnsubscribeAfterMinutes { get; set; } = 10;
     public int UpdateIntervalMs { get; set; } = 500;
-    public int SnapshotLimit { get; set; } = 500;
-    public int SnapshotWeight { get; set; } = 10;
+    /// <summary>Weight of the 1000-level REST depth snapshot each new book takes.</summary>
+    public int SnapshotWeight { get; set; } = 20;
     public int SampleSeconds { get; set; } = 1;
     public double ImbalanceRangePct { get; set; } = 0.5;
     public int ImbalanceWindowSeconds { get; set; } = 30;
