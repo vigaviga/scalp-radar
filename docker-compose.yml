@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: scalpradar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: scalpradar
+      POSTGRES_USER: scalpradar
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    ports:
+      - "5433:5432"
+    volumes:
+      - scalpradar-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scalpradar -d scalpradar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  scalpradar-pgdata:
