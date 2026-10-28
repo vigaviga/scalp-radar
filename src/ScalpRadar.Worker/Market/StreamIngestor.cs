@@ -44,6 +44,9 @@ public sealed class StreamIngestor(
 
     public int TotalStreams { get { lock (_bySymbol) return _groups.Count + 2; } }
 
+    /// <summary>Wanted symbols whose aggTrade subscribe failed on the last call; the universe service retries them.</summary>
+    public int MissingSymbols { get; private set; }
+
     public int ConnectedStreams
     {
         get
@@ -132,7 +135,7 @@ public sealed class StreamIngestor(
 
                 if (!result.Success)
                 {
-                    log.LogError("aggTrade subscribe failed for {Symbols}: {Error}. Will retry at the next universe refresh",
+                    log.LogError("aggTrade subscribe failed for {Symbols}: {Error}. Will retry shortly",
                         string.Join(",", symbols), result.Error);
                     await Task.Delay(delay, ct);
                     continue;
@@ -155,6 +158,7 @@ public sealed class StreamIngestor(
                 await Task.Delay(delay, ct);
             }
 
+            lock (_bySymbol) MissingSymbols = wanted.Count(s => !_bySymbol.ContainsKey(s));
             if (missing.Count > 0)
                 log.LogInformation("aggTrade streams: {Count} symbols subscribed in {Groups} groups", SubscribedSymbols.Count, _groups.Count);
         }

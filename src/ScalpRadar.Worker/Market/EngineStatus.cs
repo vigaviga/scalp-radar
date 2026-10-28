@@ -1,6 +1,7 @@
+using ScalpRadar.Core.Reports;
+
 namespace ScalpRadar.Worker.Market;
 
-public sealed record TopEntry(string Symbol, string Direction, int Score, int MustHaves, int Confirmations, string Passing);
 
 /// <summary>An immutable snapshot the consumer publishes on each tick, read by /status and /top.</summary>
 public sealed record EngineSnapshot(
@@ -13,7 +14,7 @@ public sealed record EngineSnapshot(
     double MaxLagMs,
     long DroppedEvents,
     int Books,
-    IReadOnlyList<TopEntry> Top);
+    IReadOnlyList<TopRow> Top);
 
 public sealed class EngineStatus
 {

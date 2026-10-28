@@ -10,7 +10,9 @@ public sealed class SignalContext(
     IOptions<OrderBookOptions> book,
     IOptions<HeatmapOptions> heatmap,
     IOptions<StateOptions> state,
-    IOptions<UniverseOptions> universe)
+    IOptions<UniverseOptions> universe,
+    IOptions<TelegramOptions> telegram,
+    IOptions<OutcomeOptions> outcomes)
 {
     public RulesOptions Rules { get; } = rules.Value;
     public RulesEngine Engine { get; } = new(rules.Value);
@@ -18,5 +20,7 @@ public sealed class SignalContext(
     public AlertDecider Decider { get; } = new(rules.Value, book.Value);
     public Shortlist Shortlist { get; } = new(book.Value);
     public string Benchmark { get; } = universe.Value.BenchmarkSymbol;
+    public OutcomeOptions Outcomes { get; } = outcomes.Value;
+    public TimeSpan FeedDownAfter { get; } = TimeSpan.FromSeconds(telegram.Value.FeedDownSeconds);
     public string ConfigHash { get; } = ConfigHasher.Compute(rules.Value, heatmap.Value, book.Value, state.Value);
 }

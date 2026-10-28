@@ -1,6 +1,7 @@
 using ScalpRadar.Core.Indicators;
 using ScalpRadar.Core.Market;
 using ScalpRadar.Core.Models;
+using ScalpRadar.Core.Reports;
 using ScalpRadar.Core.Rules;
 using ScalpRadar.Worker.Notifications;
 
@@ -13,7 +14,7 @@ public sealed partial class MarketStateLoop
 
     private IReadOnlyDictionary<string, int> _fundingIntervals = new Dictionary<string, int>();
     private int _defaultFundingHours = 8;
-    private IReadOnlyList<TopEntry> _top = [];
+    private IReadOnlyList<TopRow> _top = [];
     private ILogger? _forceOrderLog;
     private DateTime _lastScoreErrorLog;
 
@@ -90,7 +91,7 @@ public sealed partial class MarketStateLoop
             : null;
 
         var candidates = new List<ShortlistCandidate>(_states.Count);
-        var top = new List<TopEntry>(_states.Count);
+        var top = new List<TopRow>(_states.Count);
 
         foreach (var s in _states.Values)
         {
@@ -152,16 +153,16 @@ public sealed partial class MarketStateLoop
         }
     }
 
-    private static TopEntry ToTop(Evaluation e)
+    private static TopRow ToTop(Evaluation e)
     {
         var marks = string.Join(" ", e.MustHaves.Select(c => (c.Passed ? "✓" : "✗") + c.Code))
                     + " | " + string.Join(" ", e.Confirmations.Select(c => (c.Passed ? "✓" : "✗") + c.Code));
         var vetoes = e.Vetoes.Where(v => v.Triggered).Select(v => v.Code).ToList();
         if (vetoes.Count > 0) marks += " | veto " + string.Join(",", vetoes);
-        return new TopEntry(e.Symbol, e.Direction.Label(), e.Score, e.MustHavesPassed, e.ConfirmationsPassed, marks);
+        return new TopRow(e.Symbol, e.Direction.Label(), e.Score, e.MustHavesPassed, e.ConfirmationsPassed, marks);
     }
 
-    private IReadOnlyList<TopEntry> TopEntries() => _top;
+    private IReadOnlyList<TopRow> TopEntries() => _top;
 
     // Outcome tracking (milestone 7).
     partial void OnAlertRaised(AlertCandidate alert);

@@ -2,6 +2,7 @@ using System.Threading.Channels;
 using Microsoft.Extensions.Options;
 using ScalpRadar.Core.Models;
 using ScalpRadar.Core.Options;
+using ScalpRadar.Core.Outcomes;
 using ScalpRadar.Core.Rules;
 using ScalpRadar.Worker.Database;
 
@@ -11,6 +12,7 @@ public abstract record OutboxItem;
 public sealed record AlertItem(AlertCandidate Alert) : OutboxItem;
 public sealed record NearMissItem(NearMissRecord NearMiss) : OutboxItem;
 public sealed record LiquidationItem(ForceOrderEvent Liquidation) : OutboxItem;
+public sealed record OutcomeItem(OutcomeSpec Spec, OutcomeResult Result) : OutboxItem;
 
 /// <summary>A plain message (feed health, daily summary). Muted messages are logged instead of sent.</summary>
 public sealed record NoticeItem(string Text) : OutboxItem;
@@ -54,9 +56,12 @@ public sealed partial class OutboxService(
     AlertRepository alerts,
     NearMissRepository nearMisses,
     LiquidationRepository liquidations,
+    OutcomeRepository outcomes,
+    ReportRepository reports,
     AlertFormatter formatter,
     IOptions<RulesOptions> rules,
     IOptions<DatabaseOptions> dbOptions,
+    IOptions<TelegramOptions> telegramOptions,
     TimeProvider time,
     ILogger<OutboxService> log) : BackgroundService
 {
@@ -140,7 +145,6 @@ public sealed partial class OutboxService(
         {
             log.LogError(ex, "Could not save alert {Symbol} {Direction}; sending it anyway", a.Evaluation.Symbol, a.Evaluation.Direction);
         }
-        if (id is not null) OnAlertSaved(a, id.Value);
 
         var text = formatter.Format(a.Evaluation, a.Metrics, a.Btc15Pct, id);
         log.LogInformation("ALERT #{Id} {Tier} {Direction} {Symbol} @ {Price} ({Delivery})\n{Text}",
@@ -207,8 +211,7 @@ public sealed partial class OutboxService(
         }
     }
 
-    // Filled in by milestone 7 (outcomes, periodic messages).
+    // Outcomes, daily summary and cleanup: OutboxService.More.cs.
     private partial Task HandleMoreAsync(OutboxItem item, CancellationToken ct);
     private partial Task OnPeriodicAsync(DateTime now, CancellationToken ct);
-    partial void OnAlertSaved(AlertCandidate a, long id);
 }

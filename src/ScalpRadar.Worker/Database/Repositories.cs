@@ -38,13 +38,6 @@ public sealed class AlertRepository(DbConnectionFactory db)
                 Delivery = delivery,
             }, cancellationToken: ct));
     }
-
-    public async Task<int> CountSinceAsync(DateTime sinceUtc, CancellationToken ct)
-    {
-        await using var conn = await db.OpenAsync(ct);
-        return await conn.ExecuteScalarAsync<int>(new CommandDefinition(
-            "SELECT count(*) FROM alerts WHERE created_at >= @Since", new { Since = sinceUtc }, cancellationToken: ct));
-    }
 }
 
 public sealed class NearMissRepository(DbConnectionFactory db)

@@ -34,12 +34,24 @@ public sealed class UniverseService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var nextRefresh = DateTime.MinValue;
+        var retry = TimeSpan.FromSeconds(_o.StreamRetrySeconds);
         while (!stoppingToken.IsCancellationRequested)
         {
-            var ok = false;
             try
             {
-                ok = await RefreshAsync(stoppingToken);
+                var now = time.GetUtcNow().UtcDateTime;
+                if (now >= nextRefresh)
+                {
+                    var ok = await RefreshAsync(stoppingToken);
+                    // Retry soon if the first refresh failed; otherwise wait for the next hourly refresh.
+                    nextRefresh = now + (ok || _current.Count > 0 ? TimeSpan.FromMinutes(_o.RefreshMinutes) : retry);
+                }
+                else if (_globalStarted && streams.MissingSymbols > 0)
+                {
+                    log.LogWarning("Retrying aggTrade subscribe for {Count} symbol(s)", streams.MissingSymbols);
+                    await streams.EnsureTradeStreamsAsync(_current.Keys.ToList(), stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -50,9 +62,7 @@ public sealed class UniverseService(
                 log.LogError(ex, "Universe refresh failed");
             }
 
-            // Retry soon if the first refresh failed; otherwise wait for the next hourly refresh.
-            var wait = ok || _current.Count > 0 ? TimeSpan.FromMinutes(_o.RefreshMinutes) : TimeSpan.FromSeconds(30);
-            await Task.Delay(wait, time, stoppingToken).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+            await Task.Delay(retry, time, stoppingToken).ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
         }
 
         await streams.StopAsync();

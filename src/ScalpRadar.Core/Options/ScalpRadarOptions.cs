@@ -12,6 +12,9 @@ public sealed class UniverseOptions
     public string QuoteAsset { get; set; } = "USDT";
     public List<string> ExcludedSymbols { get; set; } = ["USDCUSDT", "FDUSDUSDT", "TUSDUSDT", "USDPUSDT", "BUSDUSDT", "DAIUSDT", "USD1USDT", "RLUSDUSDT", "USDEUSDT"];
     public int RefreshMinutes { get; set; } = 60;
+
+    /// <summary>How often failed trade-stream subscribes are retried (and the first refresh, if it failed).</summary>
+    public int StreamRetrySeconds { get; set; } = 30;
     public int DefaultFundingIntervalHours { get; set; } = 8;
     public string BenchmarkSymbol { get; set; } = "BTCUSDT";
 }
@@ -155,14 +158,24 @@ public sealed class TelegramOptions
     public int FeedDownSeconds { get; set; } = 120;
     public int TopCount { get; set; } = 5;
     public int DefaultStatsDays { get; set; } = 7;
+    public int MaxStatsDays { get; set; } = 365;
+    public int MaxMuteMinutes { get; set; } = 1440;
+
+    /// <summary>How many of the most often failed near-miss checks the daily summary lists.</summary>
+    public int SummaryTopFailed { get; set; } = 3;
 }
 
 public sealed class OutcomeOptions
 {
     public const string Section = "Outcomes";
-    public int TrackMinutes { get; set; } = 60;
-    public int[] Checkpoints { get; set; } = [5, 15, 60];
+    /// <summary>A live tracker with no trade after its 60 minutes ends is handed to kline recovery after this long.</summary>
     public int FinalizeGraceMinutes { get; set; } = 5;
+
+    /// <summary>How often unresolved alerts (restart, missed trackers) are looked up and resolved from 1m klines.</summary>
+    public int RecoveryIntervalSeconds { get; set; } = 60;
+
+    /// <summary>Alerts resolved from klines per recovery pass, to keep REST weight low after a long outage.</summary>
+    public int RecoveryBatchSize { get; set; } = 20;
 }
 
 public sealed class DatabaseOptions

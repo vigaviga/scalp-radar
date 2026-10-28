@@ -195,6 +195,7 @@ public sealed partial class MarketStateLoop : BackgroundService
         CloseDueCandles();
         RequestPartialCandleFills();
         Score(tick);
+        CheckFeedAndTrackers();
         PublishStatus();
         MaybeLogStats();
     }

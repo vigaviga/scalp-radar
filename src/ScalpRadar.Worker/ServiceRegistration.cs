@@ -6,6 +6,7 @@ using ScalpRadar.Worker.Binance;
 using ScalpRadar.Worker.Infrastructure;
 using ScalpRadar.Worker.Market;
 using ScalpRadar.Worker.Notifications;
+using ScalpRadar.Worker.Outcomes;
 using ScalpRadar.Worker.Telegram;
 using Telegram.Bot;
 
@@ -52,6 +53,8 @@ public static class ServiceRegistration
         services.AddSingleton<AlertRepository>();
         services.AddSingleton<NearMissRepository>();
         services.AddSingleton<LiquidationRepository>();
+        services.AddSingleton<OutcomeRepository>();
+        services.AddSingleton<ReportRepository>();
         services.AddSingleton<Outbox>();
         services.AddSingleton<MuteState>();
         services.AddHostedService<OutboxService>();
@@ -59,6 +62,7 @@ public static class ServiceRegistration
         services.AddHostedService<UniverseService>();
         services.AddHostedService<TickTimer>();
         services.AddHostedService<OiPoller>();
+        services.AddHostedService<OutcomeRecoveryService>();
         services.AddSingleton<OrderBookManager>();
         services.AddHostedService(sp => sp.GetRequiredService<OrderBookManager>());
 
@@ -78,6 +82,10 @@ public static class ServiceRegistration
         }
 
         services.AddSingleton<ICommandHandler, StatusCommand>();
+        services.AddSingleton<ICommandHandler, TopCommand>();
+        services.AddSingleton<ICommandHandler, StatsCommand>();
+        services.AddSingleton<ICommandHandler, MuteCommand>();
+        services.AddSingleton<ICommandHandler, UnmuteCommand>();
         services.AddHostedService<StartupNotice>();
         return services;
     }
