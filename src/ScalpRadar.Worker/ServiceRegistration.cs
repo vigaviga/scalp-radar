@@ -1,6 +1,8 @@
 using ScalpRadar.Core.Options;
 using ScalpRadar.Worker.Database;
+using ScalpRadar.Worker.Binance;
 using ScalpRadar.Worker.Infrastructure;
+using ScalpRadar.Worker.Market;
 using ScalpRadar.Worker.Notifications;
 using ScalpRadar.Worker.Telegram;
 using Telegram.Bot;
@@ -26,6 +28,25 @@ public static class ServiceRegistration
         services.AddSingleton<AppClock>();
         services.AddSingleton<DbConnectionFactory>();
         services.AddSingleton<DatabaseMigrator>();
+
+        // Binance: public market data only. No API key is configured, so no signed endpoint can be called.
+        var binance = config.GetSection(BinanceOptions.Section).Get<BinanceOptions>() ?? new BinanceOptions();
+        services.AddBinance(o =>
+        {
+            o.Socket.SocketSubscriptionsCombineTarget = binance.SocketSubscriptionsCombineTarget;
+            o.Socket.ReconnectInterval = TimeSpan.FromSeconds(5);
+            o.Rest.RateLimiterEnabled = true;
+        });
+        services.AddSingleton<RestGate>();
+        services.AddSingleton<MarketChannel>();
+        services.AddSingleton<EngineStatus>();
+        services.AddSingleton<UniverseRegistry>();
+        services.AddSingleton<StreamIngestor>();
+        services.AddSingleton<BackfillService>();
+        services.AddHostedService(sp => sp.GetRequiredService<BackfillService>());
+        services.AddHostedService<MarketStateLoop>();
+        services.AddHostedService<UniverseService>();
+        services.AddHostedService<TickTimer>();
 
         var telegram = config.GetSection(TelegramOptions.Section).Get<TelegramOptions>() ?? new TelegramOptions();
         if (telegram.Enabled)
