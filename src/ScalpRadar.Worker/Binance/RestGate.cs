@@ -132,5 +132,9 @@ public sealed class RestGate(IOptions<BinanceOptions> options, TimeProvider time
     }
 
     private DateTime Now => time.GetUtcNow().UtcDateTime;
-    private DateTime CurrentMinute() => new(Now.Ticks - Now.Ticks % TimeSpan.TicksPerMinute, DateTimeKind.Utc);
+    private DateTime CurrentMinute()
+    {
+        var now = Now; // read the clock once, or the two reads can straddle a tick
+        return new DateTime(now.Ticks - now.Ticks % TimeSpan.TicksPerMinute, DateTimeKind.Utc);
+    }
 }

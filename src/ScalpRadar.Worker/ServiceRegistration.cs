@@ -47,6 +47,7 @@ public static class ServiceRegistration
         services.AddHostedService<MarketStateLoop>();
         services.AddHostedService<UniverseService>();
         services.AddHostedService<TickTimer>();
+        services.AddHostedService<OiPoller>();
 
         var telegram = config.GetSection(TelegramOptions.Section).Get<TelegramOptions>() ?? new TelegramOptions();
         if (telegram.Enabled)
