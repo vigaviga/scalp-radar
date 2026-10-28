@@ -4,6 +4,7 @@ using ScalpRadar.Core.Market;
 using ScalpRadar.Core.Models;
 using ScalpRadar.Core.Options;
 using ScalpRadar.Worker.Infrastructure;
+using ScalpRadar.Worker.Notifications;
 
 namespace ScalpRadar.Worker.Market;
 
@@ -23,6 +24,9 @@ public sealed partial class MarketStateLoop : BackgroundService
     private readonly TimeProvider _time;
     private readonly ILogger<MarketStateLoop> _log;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly SignalContext _signals;
+    private readonly OrderBookManager _books;
+    private readonly Outbox _outbox;
 
     private readonly Dictionary<string, SymbolState> _states = new(StringComparer.Ordinal);
     private readonly ExchangeClock _clock = new();
@@ -47,7 +51,10 @@ public sealed partial class MarketStateLoop : BackgroundService
         IOptions<EngineOptions> engine,
         TimeProvider time,
         ILogger<MarketStateLoop> log,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        SignalContext signals,
+        OrderBookManager books,
+        Outbox outbox)
     {
         _channel = channel;
         _backfill = backfill;
@@ -59,6 +66,9 @@ public sealed partial class MarketStateLoop : BackgroundService
         _time = time;
         _log = log;
         _loggerFactory = loggerFactory;
+        _signals = signals;
+        _books = books;
+        _outbox = outbox;
     }
 
     private DateTime LocalNow => _time.GetUtcNow().UtcDateTime;

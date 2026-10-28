@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using ScalpRadar.Core.Options;
+using ScalpRadar.Core.Rules;
 using ScalpRadar.Worker.Database;
 using ScalpRadar.Worker.Binance;
 using ScalpRadar.Worker.Infrastructure;
@@ -44,6 +46,15 @@ public static class ServiceRegistration
         services.AddSingleton<StreamIngestor>();
         services.AddSingleton<BackfillService>();
         services.AddHostedService(sp => sp.GetRequiredService<BackfillService>());
+        services.AddSingleton<SignalContext>();
+        services.AddSingleton(sp => new AlertFormatter(
+            sp.GetRequiredService<IOptions<RulesOptions>>().Value, sp.GetRequiredService<IOptions<OrderBookOptions>>().Value));
+        services.AddSingleton<AlertRepository>();
+        services.AddSingleton<NearMissRepository>();
+        services.AddSingleton<LiquidationRepository>();
+        services.AddSingleton<Outbox>();
+        services.AddSingleton<MuteState>();
+        services.AddHostedService<OutboxService>();
         services.AddHostedService<MarketStateLoop>();
         services.AddHostedService<UniverseService>();
         services.AddHostedService<TickTimer>();
