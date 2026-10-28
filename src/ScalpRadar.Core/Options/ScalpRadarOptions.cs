@@ -91,6 +91,9 @@ public sealed class OrderBookOptions
     public int MinHistorySeconds { get; set; } = 30;
     public int MaxWaitForHistorySeconds { get; set; } = 30;
     public int StartsPerMinute { get; set; } = 20;
+
+    /// <summary>A book that fails to start is retried after this long, while its symbol is still shortlisted.</summary>
+    public int StartRetrySeconds { get; set; } = 30;
 }
 
 public sealed class RulesOptions

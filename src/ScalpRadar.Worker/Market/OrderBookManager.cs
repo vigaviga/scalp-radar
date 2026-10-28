@@ -34,8 +34,20 @@ public sealed class OrderBookManager(
 
     public int ActiveBooks => _books.Count;
 
-    public void Start(string symbol) => _commands.Writer.TryWrite(new Command(symbol, true));
-    public void Stop(string symbol) => _commands.Writer.TryWrite(new Command(symbol, false));
+    // Symbols the consumer wants a book for (Start without a later Stop). A failed start is retried while wanted.
+    private readonly ConcurrentDictionary<string, byte> _wanted = new(StringComparer.Ordinal);
+
+    public void Start(string symbol)
+    {
+        _wanted[symbol] = 0;
+        _commands.Writer.TryWrite(new Command(symbol, true));
+    }
+
+    public void Stop(string symbol)
+    {
+        _wanted.TryRemove(symbol, out _);
+        _commands.Writer.TryWrite(new Command(symbol, false));
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -100,8 +112,9 @@ public sealed class OrderBookManager(
         var result = await book.StartAsync(ct);
         if (!result.Success)
         {
-            log.LogWarning("Order book for {Symbol} failed to start: {Error}", symbol, result.Error);
+            log.LogWarning("Order book for {Symbol} failed to start: {Error}. Retrying in {Seconds}s", symbol, result.Error, _o.StartRetrySeconds);
             book.Dispose();
+            _ = RetryLaterAsync(symbol, ct);
             return true;
         }
 
@@ -109,6 +122,19 @@ public sealed class OrderBookManager(
         await channel.PostAsync(new BookStatusEvent(symbol, true), ct);
         log.LogInformation("Order book started for {Symbol} ({Count}/{Max})", symbol, _books.Count, _o.MaxBooks);
         return true;
+    }
+
+    private async Task RetryLaterAsync(string symbol, CancellationToken ct)
+    {
+        try
+        {
+            await Task.Delay(TimeSpan.FromSeconds(_o.StartRetrySeconds), time, ct);
+            if (_wanted.ContainsKey(symbol) && !_books.ContainsKey(symbol))
+                _commands.Writer.TryWrite(new Command(symbol, true));
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task StopBookAsync(string symbol)

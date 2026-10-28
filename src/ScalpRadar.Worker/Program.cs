@@ -17,6 +17,7 @@ try
     // machine finds the token. The Windows service gets its secrets from environment variables instead.
     builder.Configuration.AddUserSecrets<Program>(optional: true);
     builder.Configuration.AddEnvironmentVariables();
+    builder.Configuration.AddCommandLine(args); // command-line flags (e.g. --Telegram:Enabled=false) win over secrets
 
     builder.Services.AddWindowsService(o => o.ServiceName = "ScalpRadar");
     builder.Services.AddSerilog((_, lc) => lc.ReadFrom.Configuration(builder.Configuration));
