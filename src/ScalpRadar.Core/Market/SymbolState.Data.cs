@@ -33,10 +33,5 @@ public sealed partial class SymbolState
     }
 
     /// <summary>Funding rate normalised to an 8h interval, in percent.</summary>
-    public double? Rate8hPct => FundingRate is { } r ? Indicators.Funding.Rate8hPct(r, FundingIntervalHours) : null;
-
-    partial void OnBackfillMergedCore(BackfillEvent e)
-    {
-        Oi.AddRange(e.OiHistory);
-    }
+    public double? Rate8hPct => FundingRate is { } r ? ScalpRadar.Core.Indicators.Funding.Rate8hPct(r, FundingIntervalHours) : null;
 }

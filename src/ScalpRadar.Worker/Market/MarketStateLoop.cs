@@ -17,9 +17,11 @@ public sealed partial class MarketStateLoop : BackgroundService
     private readonly BackfillService _backfill;
     private readonly EngineStatus _status;
     private readonly StateOptions _stateOptions;
+    private readonly HeatmapOptions _heatmapOptions;
     private readonly EngineOptions _engine;
     private readonly TimeProvider _time;
     private readonly ILogger<MarketStateLoop> _log;
+    private readonly ILoggerFactory _loggerFactory;
 
     private readonly Dictionary<string, SymbolState> _states = new(StringComparer.Ordinal);
     private readonly ExchangeClock _clock = new();
@@ -39,17 +41,21 @@ public sealed partial class MarketStateLoop : BackgroundService
         BackfillService backfill,
         EngineStatus status,
         IOptions<StateOptions> stateOptions,
+        IOptions<HeatmapOptions> heatmapOptions,
         IOptions<EngineOptions> engine,
         TimeProvider time,
-        ILogger<MarketStateLoop> log)
+        ILogger<MarketStateLoop> log,
+        ILoggerFactory loggerFactory)
     {
         _channel = channel;
         _backfill = backfill;
         _status = status;
         _stateOptions = stateOptions.Value;
+        _heatmapOptions = heatmapOptions.Value;
         _engine = engine.Value;
         _time = time;
         _log = log;
+        _loggerFactory = loggerFactory;
     }
 
     private DateTime LocalNow => _time.GetUtcNow().UtcDateTime;

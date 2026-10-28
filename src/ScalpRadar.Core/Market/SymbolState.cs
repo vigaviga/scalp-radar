@@ -12,10 +12,11 @@ public sealed partial class SymbolState
     private readonly CandleBuilder _builder = new(TimeUtil.OneMinute);
     private readonly List<Candle> _closedScratch = [];
 
-    public SymbolState(SymbolInfo info, StateOptions options)
+    public SymbolState(SymbolInfo info, StateOptions options, HeatmapOptions? heatmap = null)
     {
         Info = info;
         _opt = options;
+        Heatmap = new ScalpRadar.Core.Indicators.LiquidationHeatmap(heatmap ?? new HeatmapOptions());
     }
 
     public SymbolInfo Info { get; set; }
